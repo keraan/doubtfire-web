@@ -11,13 +11,8 @@
   </mat-form-field>
 
   <p>Requesting extension to: {{ newDueDate }}</p>
-  <mat-slider
-    id="requestDaySlider"
-    [min]="minDaysCanExtend"
-    [max]="maxDaysCanExtend"
-    step="1"
-    [(ngModel)]="daysRequested"
-    ><input matSliderThumb />
+  <mat-slider id="requestDaySlider" discrete step="1"
+    ><input matSliderThumb [(ngModel)]="daysRequested" #slider />
   </mat-slider>
 </div>
 

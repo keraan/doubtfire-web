@@ -1,10 +1,9 @@
-import { Component, OnInit, Inject, LOCALE_ID } from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { alertService } from 'src/app/ajs-upgraded-providers';
-import { ExtensionComment } from 'src/app/api/models/task-comment/extension-comment';
-import { TaskComment, TaskCommentService, Task } from 'src/app/api/models/doubtfire-model';
-import { AppInjector } from 'src/app/app-injector';
-import { formatDate } from '@angular/common';
+import {Component, OnInit, Inject, LOCALE_ID} from '@angular/core';
+import {MatDialogRef, MAT_DIALOG_DATA} from '@angular/material/dialog';
+import {alertService} from 'src/app/ajs-upgraded-providers';
+import {TaskComment, TaskCommentService, Task} from 'src/app/api/models/doubtfire-model';
+import {AppInjector} from 'src/app/app-injector';
+import {formatDate} from '@angular/common';
 
 @Component({
   selector: 'extension-modal',
@@ -12,12 +11,12 @@ import { formatDate } from '@angular/common';
   styleUrls: ['./extension-modal.component.scss'],
 })
 export class ExtensionModalComponent implements OnInit {
-  daysRequested: number;
+  daysRequested = 0;
   reason: string = '';
   constructor(
     public dialogRef: MatDialogRef<ExtensionModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: {task: Task, afterApplication?: () => void},
-    @Inject(alertService) private alerts: any
+    @Inject(MAT_DIALOG_DATA) public data: {task: Task; afterApplication?: () => void},
+    @Inject(alertService) private alerts: unknown,
   ) {}
 
   ngOnInit() {
@@ -28,7 +27,9 @@ export class ExtensionModalComponent implements OnInit {
   }
 
   get newDueDate() {
-    const calculatedDueDate = new Date(this.data.task.localDueDate().getTime() + this.daysRequested * 1000 * 60 * 60 * 24 );
+    const calculatedDueDate = new Date(
+      this.data.task.localDueDate().getTime() + this.daysRequested * 1000 * 60 * 60 * 24,
+    );
     const taskDeadlineDate: Date = this.data.task.definition.localDeadlineDate();
 
     const locale: string = AppInjector.get(LOCALE_ID);
@@ -60,6 +61,7 @@ export class ExtensionModalComponent implements OnInit {
     const tcs: TaskCommentService = AppInjector.get(TaskCommentService);
 
     tcs.requestExtension(this.reason, this.daysRequested, this.data.task).subscribe({
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       next: ((tc: TaskComment) => {
         this.alerts.add('success', 'Extension requested.', 2000);
         this.scrollCommentsDown();
