@@ -6,7 +6,6 @@ import {
   Input,
   OnChanges,
   SimpleChanges,
-  HostListener,
   ViewChild,
   TemplateRef,
   OnDestroy,
@@ -31,7 +30,7 @@ import {DoubtfireConstants} from 'src/app/config/constants/doubtfire-constants';
 import {SelectedTaskService} from 'src/app/projects/states/dashboard/selected-task.service';
 import {AlertService} from 'src/app/common/services/alert.service';
 import {HotkeysService} from '@ngneat/hotkeys';
-import { TasksInCachePipe } from 'src/app/common/filters/tasks-in-cache.pipe';
+import {TasksInCachePipe} from 'src/app/common/filters/tasks-in-cache.pipe';
 
 @Component({
   selector: 'df-staff-task-list',
@@ -207,7 +206,7 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   clearCache() {
-    localStorage.setItem('recently-viewed-submissions', '[]')
+    localStorage.setItem('recently-viewed-submissions', '[]');
   }
 
   toggleUseCache() {
@@ -221,15 +220,13 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   addTaskToCache(task: Task) {
-    if (!task) return;
-    try {
-      const storedTasks = localStorage.getItem('recently-viewed-submissions');
-      const parsedIds = JSON.parse(storedTasks)
-      parsedIds.push(task.id)
-      localStorage.setItem('recently-viewed-submissions', JSON.stringify(parsedIds));
-    } catch (error) {
-      console.error('Failed to parse stored tasks:', error)
-    }
+    if (task === null) return;
+
+    const storedTasks = localStorage.getItem('recently-viewed-submissions');
+    const parsedIds = JSON.parse(storedTasks);
+
+    parsedIds.push(task.id);
+    localStorage.setItem('recently-viewed-submissions', JSON.stringify(parsedIds));
   }
 
   public get isTaskDefMode(): boolean {
@@ -271,8 +268,8 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     if (this.filters.useCache) {
       filteredTasks = this.tasksInCachePipe.transform(
         filteredTasks,
-        true // useCache
-      )
+        true, // useCache
+      );
       // filteredTasks = filteredTasks.filter((task) => this.tasksInCache.includes(task.id));
     }
     if (this.filters.tutorials) {
@@ -388,12 +385,10 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
-
-
   setSelectedTask(task: Task) {
     this.selectedTaskService.setSelectedTask(task);
     this.taskData.selectedTask = task;
-    this.addTaskToCache(task)
+    this.addTaskToCache(task);
     if (this.taskData.onSelectedTaskChange) {
       this.taskData.onSelectedTaskChange(task);
     }
