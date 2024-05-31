@@ -60,7 +60,6 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     studentName: string;
     tutorialIdSelected: any;
     taskDefinitionIdSelected: number | TaskDefinition;
-    useCache: boolean;
   };
   @Input() showSearchOptions = true;
 
@@ -207,30 +206,6 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     this.refreshData();
   }
 
-  clearCache() {
-    localStorage.setItem('recently-viewed-submissions', '[]');
-  }
-
-  toggleUseCache() {
-    this.filters.useCache = !this.filters.useCache;
-  }
-
-  transformToTaskInstance(taskData: any): Task {
-    const task = new Task();
-    Object.assign(task, taskData);
-    return task;
-  }
-
-  addTaskToCache(task: Task) {
-    if (task === null) return;
-
-    const storedTasks = localStorage.getItem('recently-viewed-submissions');
-    const parsedIds = JSON.parse(storedTasks);
-
-    parsedIds.push(task.id);
-    localStorage.setItem('recently-viewed-submissions', JSON.stringify(parsedIds));
-  }
-
   public get isTaskDefMode(): boolean {
     return this.taskData.taskDefMode;
   }
@@ -267,13 +242,7 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
 
   applyFilters() {
     let filteredTasks = this.definedTasksPipe.transform(this.tasks, this.filters.taskDefinition);
-    if (this.filters.useCache) {
-      filteredTasks = this.tasksInCachePipe.transform(
-        filteredTasks,
-        true, // useCache
-      );
-      // filteredTasks = filteredTasks.filter((task) => this.tasksInCache.includes(task.id));
-    }
+
     if (this.filters.tutorials) {
       filteredTasks = this.tasksInTutorialsPipe.transform(
         filteredTasks,
@@ -388,9 +357,10 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   setSelectedTask(task: Task) {
+    if (task === null || task === undefined) return;
     this.selectedTaskService.setSelectedTask(task);
     this.taskData.selectedTask = task;
-    this.addTaskToCache(task);
+    this.recentlyInteractedTaskService.addInteractedTask(task.id, task.unit.id);
     if (this.taskData.onSelectedTaskChange) {
       this.taskData.onSelectedTaskChange(task);
     }
