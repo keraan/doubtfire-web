@@ -30,7 +30,6 @@ import {DoubtfireConstants} from 'src/app/config/constants/doubtfire-constants';
 import {SelectedTaskService} from 'src/app/projects/states/dashboard/selected-task.service';
 import {AlertService} from 'src/app/common/services/alert.service';
 import {HotkeysService} from '@ngneat/hotkeys';
-import {TasksInCachePipe} from 'src/app/common/filters/tasks-in-cache.pipe';
 import { RecentlyInteractedTaskService } from 'src/app/api/services/recently-interacted-task.service';
 
 @Component({
@@ -86,7 +85,6 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   definedTasksPipe = new TasksOfTaskDefinitionPipe();
   tasksInTutorialsPipe = new TasksInTutorialsPipe();
   taskWithStudentNamePipe = new TasksForInboxSearchPipe();
-  tasksInCachePipe = new TasksInCachePipe();
   // Let's call having a source of tasksForDefinition plus having a task definition
   // auto-selected with the search options open task def mode -- i.e., the mode
   // for selecting tasks by task definitions
