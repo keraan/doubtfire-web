@@ -31,6 +31,7 @@ import {DoubtfireConstants} from 'src/app/config/constants/doubtfire-constants';
 import {SelectedTaskService} from 'src/app/projects/states/dashboard/selected-task.service';
 import {AlertService} from 'src/app/common/services/alert.service';
 import {HotkeysService} from '@ngneat/hotkeys';
+import { TasksInCachePipe } from 'src/app/common/filters/tasks-in-cache.pipe';
 
 @Component({
   selector: 'df-staff-task-list',
@@ -86,11 +87,10 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   definedTasksPipe = new TasksOfTaskDefinitionPipe();
   tasksInTutorialsPipe = new TasksInTutorialsPipe();
   taskWithStudentNamePipe = new TasksForInboxSearchPipe();
+  tasksInCachePipe = new TasksInCachePipe();
   // Let's call having a source of tasksForDefinition plus having a task definition
   // auto-selected with the search options open task def mode -- i.e., the mode
   // for selecting tasks by task definitions
-
-  tasksInCache: Task[] = null;
 
   states = [
     {sort: 'default', icon: 'horizontal_rule'},
@@ -203,16 +203,11 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     // Initially not watching the task key
     this.watchingTaskKey = false;
 
-    try {
-      const storedTasks = localStorage.getItem('recently-viewed-submissions');
-      const parsedTasks = JSON.parse(storedTasks)
-      this.tasksInCache = parsedTasks.map(task => this.transformToTaskInstance(task)).filter(task => task !== null);
-    } catch (error) {
-      console.error('Failed to parse stored tasks:', error)
-      this.tasksInCache = []
-    }
-
     this.refreshData();
+  }
+
+  clearCache() {
+    localStorage.setItem('recently-viewed-submissions', '[]')
   }
 
   toggleUseCache() {
@@ -227,33 +222,14 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
 
   addTaskToCache(task: Task) {
     if (!task) return;
-    this.tasksInCache.push(task);
-    console.log(this.tasksInCache)
-    console.log(task)
-    const shallowCopies = this.tasksInCache.map(task => this.shallowCopyTask(task));
-    localStorage.setItem('recently-viewed-submissions', JSON.stringify(shallowCopies));
-  }
-
-  shallowCopyTask(task: Task) {
-    return {
-        id: task.id,
-        // status: task.status,
-        // dueDate: task.dueDate,
-        // extensions: task.extensions,
-        // submissionDate: task.submissionDate,
-        // completionDate: task.completionDate,
-        // timesAssessed: task.timesAssessed,
-        // grade: task.grade,
-        // qualityPts: task.qualityPts,
-        // includeInPortfolio: task.includeInPortfolio,
-        // similarityFlag: task.similarityFlag,
-        // numNewComments: task.numNewComments,
-        // hasExtensions: task.hasExtensions,
-        // hasPdf: task.hasPdf,
-        // processingPdf: task.processingPdf,
-        // pinned: task.pinned,
-        // topWeight: task.topWeight
-    };
+    try {
+      const storedTasks = localStorage.getItem('recently-viewed-submissions');
+      const parsedIds = JSON.parse(storedTasks)
+      parsedIds.push(task.id)
+      localStorage.setItem('recently-viewed-submissions', JSON.stringify(parsedIds));
+    } catch (error) {
+      console.error('Failed to parse stored tasks:', error)
+    }
   }
 
   public get isTaskDefMode(): boolean {
@@ -293,7 +269,11 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   applyFilters() {
     let filteredTasks = this.definedTasksPipe.transform(this.tasks, this.filters.taskDefinition);
     if (this.filters.useCache) {
-      filteredTasks = filteredTasks.filter((task) => this.tasksInCache.find((cachedTask) => cachedTask.id === task.id));
+      filteredTasks = this.tasksInCachePipe.transform(
+        filteredTasks,
+        true // useCache
+      )
+      // filteredTasks = filteredTasks.filter((task) => this.tasksInCache.includes(task.id));
     }
     if (this.filters.tutorials) {
       filteredTasks = this.tasksInTutorialsPipe.transform(
