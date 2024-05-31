@@ -31,6 +31,7 @@ import {SelectedTaskService} from 'src/app/projects/states/dashboard/selected-ta
 import {AlertService} from 'src/app/common/services/alert.service';
 import {HotkeysService} from '@ngneat/hotkeys';
 import {TasksInCachePipe} from 'src/app/common/filters/tasks-in-cache.pipe';
+import { RecentlyInteractedTaskService } from 'src/app/api/services/recently-interacted-task.service';
 
 @Component({
   selector: 'df-staff-task-list',
@@ -103,6 +104,7 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   allowHover = true;
 
   constructor(
+    private recentlyInteractedTaskService: RecentlyInteractedTaskService,
     private selectedTaskService: SelectedTaskService,
     private alertService: AlertService,
     private fileDownloaderService: FileDownloaderService,

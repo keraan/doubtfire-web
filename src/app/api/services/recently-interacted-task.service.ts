@@ -5,7 +5,7 @@ import {RxStorage} from 'ngx-reactive-storage';
   providedIn: 'root',
 })
 export class RecentlyInteractedTaskService {
-  storage = new RxStorage();
+  private storage = new RxStorage();
 
   constructor() {
     this.storage.get('recentlyInteractedTasks').then((data) => {
