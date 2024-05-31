@@ -59,6 +59,7 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     studentName: string;
     tutorialIdSelected: any;
     taskDefinitionIdSelected: number | TaskDefinition;
+    useCache: boolean;
   };
   @Input() showSearchOptions = true;
 
@@ -88,6 +89,8 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
   // Let's call having a source of tasksForDefinition plus having a task definition
   // auto-selected with the search options open task def mode -- i.e., the mode
   // for selecting tasks by task definitions
+
+  tasksInCache: Task[] = null;
 
   states = [
     {sort: 'default', icon: 'horizontal_rule'},
@@ -167,6 +170,7 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
         taskDefinitionIdSelected: null,
         taskDefinition: null,
         forceStream: true,
+        useCache: false,
       },
       this.filters,
     );
@@ -199,7 +203,57 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     // Initially not watching the task key
     this.watchingTaskKey = false;
 
+    try {
+      const storedTasks = localStorage.getItem('recently-viewed-submissions');
+      const parsedTasks = JSON.parse(storedTasks)
+      this.tasksInCache = parsedTasks.map(task => this.transformToTaskInstance(task)).filter(task => task !== null);
+    } catch (error) {
+      console.error('Failed to parse stored tasks:', error)
+      this.tasksInCache = []
+    }
+
     this.refreshData();
+  }
+
+  toggleUseCache() {
+    this.filters.useCache = !this.filters.useCache;
+  }
+
+  transformToTaskInstance(taskData: any): Task {
+    const task = new Task();
+    Object.assign(task, taskData);
+    return task;
+  }
+
+  addTaskToCache(task: Task) {
+    if (!task) return;
+    this.tasksInCache.push(task);
+    console.log(this.tasksInCache)
+    console.log(task)
+    const shallowCopies = this.tasksInCache.map(task => this.shallowCopyTask(task));
+    localStorage.setItem('recently-viewed-submissions', JSON.stringify(shallowCopies));
+  }
+
+  shallowCopyTask(task: Task) {
+    return {
+        id: task.id,
+        // status: task.status,
+        // dueDate: task.dueDate,
+        // extensions: task.extensions,
+        // submissionDate: task.submissionDate,
+        // completionDate: task.completionDate,
+        // timesAssessed: task.timesAssessed,
+        // grade: task.grade,
+        // qualityPts: task.qualityPts,
+        // includeInPortfolio: task.includeInPortfolio,
+        // similarityFlag: task.similarityFlag,
+        // numNewComments: task.numNewComments,
+        // hasExtensions: task.hasExtensions,
+        // hasPdf: task.hasPdf,
+        // processingPdf: task.processingPdf,
+        // pinned: task.pinned,
+        // topWeight: task.topWeight
+    };
   }
 
   public get isTaskDefMode(): boolean {
@@ -238,6 +292,9 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
 
   applyFilters() {
     let filteredTasks = this.definedTasksPipe.transform(this.tasks, this.filters.taskDefinition);
+    if (this.filters.useCache) {
+      filteredTasks = filteredTasks.filter((task) => this.tasksInCache.find((cachedTask) => cachedTask.id === task.id));
+    }
     if (this.filters.tutorials) {
       filteredTasks = this.tasksInTutorialsPipe.transform(
         filteredTasks,
@@ -351,9 +408,12 @@ export class StaffTaskListComponent implements OnInit, OnChanges, OnDestroy {
     });
   }
 
+
+
   setSelectedTask(task: Task) {
     this.selectedTaskService.setSelectedTask(task);
     this.taskData.selectedTask = task;
+    this.addTaskToCache(task)
     if (this.taskData.onSelectedTaskChange) {
       this.taskData.onSelectedTaskChange(task);
     }
